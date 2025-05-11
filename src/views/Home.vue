@@ -1,296 +1,525 @@
 <template>
-  <div class="min-h-screen bg-gray-50">
-    <div v-if="apiKeyMissing" class="flex flex-col items-center justify-center min-h-screen">
-      <div class="bg-white rounded-xl shadow-md p-8 w-full max-w-md flex flex-col items-center">
-        <h2 class="text-xl font-semibold mb-4 text-gray-900">Enter your API Key</h2>
-        <input
-          v-model="apiKeyInput"
-          type="text"
-          placeholder="Paste your API key here"
-          class="w-full border border-gray-300 rounded-lg px-4 py-2 mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
-        />
-        <button
-          @click="saveApiKey"
-          class="w-full bg-blue-600 text-white rounded-lg px-4 py-2 font-semibold hover:bg-blue-700 transition-colors"
+  <div class="min-h-screen">
+    <div class="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 min-h-screen">
+      <div v-if="apiKeyMissing" class="flex flex-col items-center justify-center min-h-screen">
+        <div
+          class="bg-white dark:bg-gray-900 rounded-xl shadow-md p-8 w-full max-w-md flex flex-col items-center"
         >
-          Save API Key
-        </button>
+          <h2 class="text-xl font-semibold mb-4">Enter your API Key</h2>
+          <input
+            v-model="apiKeyInput"
+            type="text"
+            placeholder="Paste your API key here"
+            class="w-full border border-gray-300 dark:border-gray-700 rounded-lg px-4 py-2 mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-gray-100"
+          />
+          <button
+            @click="saveApiKey"
+            class="w-full bg-blue-600 text-white rounded-lg px-4 py-2 font-semibold hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800 transition-colors"
+          >
+            Save API Key
+          </button>
+        </div>
       </div>
-    </div>
-    <div v-else>
-      <div class="max-w-3xl mx-auto px-4 py-6">
-        <header class="mb-6">
-          <h1 class="text-2xl font-semibold text-gray-900">Budget Overview</h1>
-          <p class="text-sm text-gray-500 mt-1">Track your income and expenses</p>
-        </header>
-
-        <div v-if="store.loading || budgetsStore.loading || transactionsStore.loading" 
-             class="flex items-center justify-center py-12">
-          <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-        </div>
-
-        <div v-else-if="store.error" class="bg-red-50 p-4 rounded-lg">
-          <p class="text-red-600">{{ store.error }}</p>
-        </div>
-        <div v-else-if="budgetsStore.error" class="bg-red-50 p-4 rounded-lg">
-          <p class="text-red-600">{{ budgetsStore.error }}</p>
-        </div>
-        <div v-else-if="transactionsStore.error" class="bg-red-50 p-4 rounded-lg">
-          <p class="text-red-600">{{ transactionsStore.error }}</p>
-        </div>
-        <div v-else>
-          <div v-if="store.categories.length === 0" 
-               class="text-center py-12 bg-white rounded-xl shadow-sm">
-            <p class="text-gray-500">No categories found</p>
-          </div>
-          <div v-else class="space-y-6">
-          
-
-            <!-- Income Section -->
+      <div v-else>
+        <div class="max-w-3xl mx-auto px-4 py-6">
+          <header class="mb-6 flex items-center justify-between">
             <div>
-              <button @click="showIncome = !showIncome" class="flex items-center w-full mb-2 group">
-                <span class="text-lg font-medium text-gray-900 mr-2">Income</span>
-                <svg :class="showIncome ? 'rotate-90' : ''" class="w-4 h-4 text-gray-500 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                </svg>
-              </button>
-              <transition name="fade">
-                <div v-show="showIncome && (groupedIncomeCategories.ungrouped.length > 0 || Object.keys(groupedIncomeCategories.grouped).length > 0)" class="space-y-3">
-                  <!-- Grouped Income Categories -->
-                  <div v-for="group in categoryGroupsStore.groups" :key="group.id">
-                    <template v-if="groupedIncomeCategories.grouped[group.id] && groupedIncomeCategories.grouped[group.id].length > 0">
-                      <button @click="incomeGroupCollapse[group.id] = !incomeGroupCollapse[group.id]" class="flex items-center w-full mb-1 group">
-                        <span class="text-base font-semibold text-gray-800 mr-2">{{ group.name }} Group</span>
-                        <svg :class="incomeGroupCollapse[group.id] ? '' : 'rotate-90'" class="w-4 h-4 text-gray-500 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                        </svg>
-                      </button>
-                      <transition name="fade">
-                        <div v-show="!incomeGroupCollapse[group.id]" class="space-y-3 ml-2">
-                          <div v-for="category in groupedIncomeCategories.grouped[group.id]" :key="category.id" class="bg-white rounded-xl shadow-sm overflow-hidden">
-                            <button 
-                              class="w-full flex items-center p-4 hover:bg-gray-50 active:bg-gray-100 transition-colors"
-                              @click="openCategoryModal(category)"
+              <h1 class="text-2xl font-semibold">Budget Overview</h1>
+              <p class="text-sm text-gray-500 mt-1">Track your income and expenses</p>
+            </div>
+            <button
+              @click="showConfig = true"
+              class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors"
+              aria-label="Settings"
+            >
+              <Cog6ToothIcon class="w-6 h-6 text-gray-500 dark:text-gray-300" />
+            </button>
+          </header>
+          <!-- Config Modal -->
+          <transition name="fade">
+            <div
+              v-if="showConfig"
+              class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 dark:bg-black/70"
+            >
+              <div
+                class="bg-white dark:bg-gray-900 rounded-xl shadow-lg p-6 w-full max-w-sm relative "
+              >
+                <button
+                  @click="showConfig = false"
+                  class="absolute top-2 right-2 p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                  aria-label="Close"
+                >
+                  <svg
+                    class="w-5 h-5 text-gray-500 dark:text-gray-300"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </button>
+                <h2 class="text-lg font-semibold mb-4">Settings</h2>
+                <div class="flex items-center justify-between mb-2">
+                  <span class="text-gray-800 dark:text-gray-200">Dark Mode</span>
+                  <label class="inline-flex relative items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      class="sr-only peer"
+                      v-model="darkMode"
+                      @change="toggleDarkMode"
+                    />
+                    <div
+                      class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-500 dark:bg-gray-700 rounded-full peer peer-checked:bg-blue-600 transition-colors"
+                    ></div>
+                    <div
+                      class="absolute left-1 top-1 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-full h-4 w-4 transition-transform"
+                      :class="darkMode ? 'translate-x-5' : ''"
+                    ></div>
+                  </label>
+                </div>
+              </div>
+            </div>
+          </transition>
+
+          <div
+            v-if="store.loading || budgetsStore.loading || transactionsStore.loading"
+            class="flex items-center justify-center py-12"
+          >
+            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+          </div>
+
+          <div v-else-if="store.error" class="bg-red-50 p-4 rounded-lg">
+            <p class="text-red-600">{{ store.error }}</p>
+          </div>
+          <div v-else-if="budgetsStore.error" class="bg-red-50 p-4 rounded-lg">
+            <p class="text-red-600">{{ budgetsStore.error }}</p>
+          </div>
+          <div v-else-if="transactionsStore.error" class="bg-red-50 p-4 rounded-lg">
+            <p class="text-red-600">{{ transactionsStore.error }}</p>
+          </div>
+          <div v-else>
+            <div
+              v-if="store.categories.length === 0"
+              class="text-center py-12 bg-white dark:bg-gray-900 rounded-xl shadow-sm"
+            >
+              <p class="text-gray-500">No categories found</p>
+            </div>
+            <div v-else class="space-y-6">
+              <!-- Income Section -->
+              <div>
+                <button
+                  @click="showIncome = !showIncome"
+                  class="flex items-center w-full mb-2 group"
+                >
+                  <span class="text-lg font-medium text-gray-900 dark:text-gray-200 mr-2">Income</span>
+                  <svg
+                    :class="showIncome ? 'rotate-90' : ''"
+                    class="w-4 h-4 text-gray-500 transition-transform"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M9 5l7 7-7 7"
+                    />
+                  </svg>
+                </button>
+                <transition name="fade">
+                  <div
+                    v-show="
+                      showIncome &&
+                      (groupedIncomeCategories.ungrouped.length > 0 ||
+                        Object.keys(groupedIncomeCategories.grouped).length > 0)
+                    "
+                    class="space-y-3"
+                  >
+                    <!-- Grouped Income Categories -->
+                    <div class="ml-4" v-for="group in categoryGroupsStore.groups" :key="group.id">
+                      <template
+                        v-if="
+                          groupedIncomeCategories.grouped[group.id] &&
+                          groupedIncomeCategories.grouped[group.id].length > 0
+                        "
+                      >
+                        <button
+                          @click="incomeGroupCollapse[group.id] = !incomeGroupCollapse[group.id]"
+                          class="flex items-center w-full mb-1 group"
+                        >
+                          <span class="text-base font-semibold text-gray-800 dark:text-gray-200 mr-2"
+                            >{{ group.name }} Group</span
+                          >
+                          <svg
+                            :class="incomeGroupCollapse[group.id] ? '' : 'rotate-90'"
+                            class="w-4 h-4 text-gray-500 transition-transform"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              stroke-width="2"
+                              d="M9 5l7 7-7 7"
+                            />
+                          </svg>
+                        </button>
+                        <transition name="fade">
+                          <div v-show="!incomeGroupCollapse[group.id]" class="space-y-3 ml-2">
+                            <div
+                              v-for="category in groupedIncomeCategories.grouped[group.id]"
+                              :key="category.id"
+                              class="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden"
                             >
-                              <span class="text-2xl mr-4">{{ category.emoji }}</span>
-                              <div class="flex-1 text-left">
-                                <h3 class="font-medium text-gray-900">{{ category.name }}</h3>
-                                <div class="mt-2">
-                                  <div class="relative h-2 bg-gray-100 rounded-full overflow-hidden">
-                                    <div 
-                                      class="absolute inset-y-0 left-0 rounded-full transition-all duration-300 bg-emerald-500"
-                                      :style="{ width: `${getProgressPercentage(category.id, 'income')}%` }"
-                                    ></div>
-                                  </div>
-                                  <div class="flex items-center justify-between mt-1">
-                                    <div class="text-left">
-                                      <div class="text-lg font-medium text-gray-900">
-                                        {{ getCategoryIncome(category.id) }}
-                                      </div>
-                                      <div class="text-xs text-gray-500">
-                                        Expected: {{ getCategoryBudget(category.id, 'income') }}
+                              <button
+                                class="w-full flex items-center p-4 hover:bg-gray-50 active:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                                @click="openCategoryModal(category)"
+                              >
+                                <span class="text-2xl mr-4">{{ category.emoji }}</span>
+                                <div class="flex-1 text-left">
+                                  <h3 class="font-medium text-gray-900 dark:text-gray-100">{{ category.name }}</h3>
+                                  <div class="mt-2">
+                                    <div
+                                      class="relative h-2 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden"
+                                    >
+                                      <div
+                                        class="absolute inset-y-0 left-0 rounded-full transition-all duration-300 bg-emerald-500"
+                                        :style="{
+                                          width: `${getProgressPercentage(category.id, 'income')}%`,
+                                        }"
+                                      ></div>
+                                    </div>
+                                    <div class="flex items-center justify-between mt-1">
+                                      <div class="text-left">
+                                        <div class="text-lg font-medium text-gray-900 dark:text-gray-100">
+                                          {{ getCategoryIncome(category.id) }}
+                                        </div>
+                                        <div class="text-xs text-gray-500 dark:text-gray-300">
+                                          Expected: {{ getCategoryBudget(category.id, 'income') }}
+                                        </div>
                                       </div>
                                     </div>
                                   </div>
                                 </div>
-                              </div>
-                              <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                              </svg>
-                            </button>
+                                <svg
+                                  class="w-5 h-5 text-gray-400"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M9 5l7 7-7 7"
+                                  />
+                                </svg>
+                              </button>
+                            </div>
                           </div>
-                        </div>
-                      </transition>
-                    </template>
-                  </div>
-                  <!-- Ungrouped Income Categories -->
-                  <div v-for="category in groupedIncomeCategories.ungrouped" :key="category.id" class="bg-white rounded-xl shadow-sm overflow-hidden">
-                    <button 
-                      class="w-full flex items-center p-4 hover:bg-gray-50 active:bg-gray-100 transition-colors"
-                      @click="openCategoryModal(category)"
+                        </transition>
+                      </template>
+                    </div>
+                    <!-- Ungrouped Income Categories -->
+                    <div
+                      v-for="category in groupedIncomeCategories.ungrouped"
+                      :key="category.id"
+                      class="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden"
                     >
-                      <span class="text-2xl mr-4">{{ category.emoji }}</span>
-                      <div class="flex-1 text-left">
-                        <h3 class="font-medium text-gray-900">{{ category.name }}</h3>
-                        <div class="mt-2">
-                          <div class="relative h-2 bg-gray-100 rounded-full overflow-hidden">
-                            <div 
-                              class="absolute inset-y-0 left-0 rounded-full transition-all duration-300 bg-emerald-500"
-                              :style="{ width: `${getProgressPercentage(category.id, 'income')}%` }"
-                            ></div>
-                          </div>
-                          <div class="flex items-center justify-between mt-1">
-                            <div class="text-left">
-                              <div class="text-lg font-medium text-gray-900">
-                                {{ getCategoryIncome(category.id) }}
-                              </div>
-                              <div class="text-xs text-gray-500">
-                                Expected: {{ getCategoryBudget(category.id, 'income') }}
+                      <button
+                        class="w-full flex items-center p-4 hover:bg-gray-50 active:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                        @click="openCategoryModal(category)"
+                      >
+                        <span class="text-2xl mr-4">{{ category.emoji }}</span>
+                        <div class="flex-1 text-left">
+                          <h3 class="font-medium text-gray-900 dark:text-gray-100">{{ category.name }}</h3>
+                          <div class="mt-2">
+                            <div
+                              class="relative h-2 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden"
+                            >
+                              <div
+                                class="absolute inset-y-0 left-0 rounded-full transition-all duration-300 bg-emerald-500"
+                                :style="{
+                                  width: `${getProgressPercentage(category.id, 'income')}%`,
+                                }"
+                              ></div>
+                            </div>
+                            <div class="flex items-center justify-between mt-1">
+                              <div class="text-left">
+                                <div class="text-lg font-medium text-gray-900 dark:text-gray-100">
+                                  {{ getCategoryIncome(category.id) }}
+                                </div>
+                                <div class="text-xs text-gray-500 dark:text-gray-300">
+                                  Expected: {{ getCategoryBudget(category.id, 'income') }}
+                                </div>
                               </div>
                             </div>
                           </div>
                         </div>
-                      </div>
-                      <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                      </svg>
-                    </button>
+                        <svg
+                          class="w-5 h-5 text-gray-400"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M9 5l7 7-7 7"
+                          />
+                        </svg>
+                      </button>
+                    </div>
                   </div>
-                </div>
-              </transition>
-            </div>
-
+                </transition>
+              </div>
 
               <!-- Stat Cards -->
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-              <div class="bg-white rounded-xl shadow-sm p-4 flex flex-col items-center">
-                <div class="text-xs text-gray-500 mb-1">Total Budgeted</div>
-                <div class="text-2xl font-semibold text-gray-900">{{ formatCurrency(totalBudgeted) }}</div>
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 flex flex-col items-center">
+                  <div class="text-xs text-gray-500 mb-1">Total Budgeted</div>
+                  <div class="text-2xl font-semibold">{{ formatCurrency(totalBudgeted) }}</div>
+                </div>
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 flex flex-col items-center">
+                  <div class="text-xs text-gray-500 mb-1">Total Spent</div>
+                  <div class="text-2xl font-semibold">{{ formatCurrency(totalSpent) }}</div>
+                </div>
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 flex flex-col items-center">
+                  <div class="text-xs text-gray-500 mb-1">Total Available</div>
+                  <div class="text-2xl font-semibold">{{ formatCurrency(totalAvailableFromBudget) }}</div>
+                </div>
               </div>
-              <div class="bg-white rounded-xl shadow-sm p-4 flex flex-col items-center">
-                <div class="text-xs text-gray-500 mb-1">Total Spent</div>
-                <div class="text-2xl font-semibold text-gray-900">{{ formatCurrency(totalSpent) }}</div>
-              </div>
-              <div class="bg-white rounded-xl shadow-sm p-4 flex flex-col items-center">
-                <div class="text-xs text-gray-500 mb-1">Total Available</div>
-                <div class="text-2xl font-semibold text-gray-900">{{ formatCurrency(totalAvailableFromBudget) }}</div>
-              </div>
-            </div>
 
-            <!-- Budget Section -->
-            <div>
-              <button @click="showBudget = !showBudget" class="flex items-center w-full mb-2 group">
-                <span class="text-lg font-medium text-gray-900 mr-2">Budget</span>
-                <svg :class="showBudget ? 'rotate-90' : ''" class="w-4 h-4 text-gray-500 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                </svg>
-              </button>
-              <transition name="fade">
-                <div v-show="showBudget && (groupedBudgetCategories.ungrouped.length > 0 || Object.keys(groupedBudgetCategories.grouped).length > 0)">
-                  <!-- Grouped Budget Categories -->
-                  <div v-for="group in categoryGroupsStore.groups" :key="group.id">
-                    <template v-if="groupedBudgetCategories.grouped[group.id] && groupedBudgetCategories.grouped[group.id].length > 0">
-                      <button @click="budgetGroupCollapse[group.id] = !budgetGroupCollapse[group.id]" class="flex items-center w-full mb-1 group">
-                        <span class="text-base font-semibold text-gray-800 mr-2">{{ group.name }} Group</span>
-                        <svg :class="budgetGroupCollapse[group.id] ? '' : 'rotate-90'" class="w-4 h-4 text-gray-500 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                        </svg>
-                      </button>
-                      <transition name="fade">
-                        <div v-show="!budgetGroupCollapse[group.id]" class="space-y-3 ml-2">
-                          <div v-for="category in groupedBudgetCategories.grouped[group.id]" :key="category.id" class="bg-white rounded-xl shadow-sm overflow-hidden">
-                            <button 
-                              class="w-full flex items-center p-4 hover:bg-gray-50 active:bg-gray-100 transition-colors"
-                              @click="openCategoryModal(category)"
+              <!-- Budget Section -->
+              <div>
+                <button
+                  @click="showBudget = !showBudget"
+                  class="flex items-center w-full mb-2 group"
+                >
+                  <span class="text-lg font-medium text-gray-900 dark:text-gray-200 mr-2">Budget</span>
+                  <svg
+                    :class="showBudget ? 'rotate-90' : ''"
+                    class="w-4 h-4 text-gray-500 dark:text-gray-300 transition-transform"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M9 5l7 7-7 7"
+                    />
+                  </svg>
+                </button>
+                <transition name="fade">
+                  <div
+                    v-show="
+                      showBudget &&
+                      (groupedBudgetCategories.ungrouped.length > 0 ||
+                        Object.keys(groupedBudgetCategories.grouped).length > 0)
+                    "
+                  >
+                    <!-- Grouped Budget Categories -->
+                    <div class="ml-4" v-for="group in categoryGroupsStore.groups" :key="group.id">
+                      <template
+                        v-if="
+                          groupedBudgetCategories.grouped[group.id] &&
+                          groupedBudgetCategories.grouped[group.id].length > 0
+                        "
+                      >
+                        <button
+                          @click="budgetGroupCollapse[group.id] = !budgetGroupCollapse[group.id]"
+                          class="flex items-center w-full mb-1 group"
+                        >
+                          <span class="text-base font-semibold text-gray-800 dark:text-gray-200 mr-2"
+                            >{{ group.name }} Group</span
+                          >
+                          <svg
+                            :class="budgetGroupCollapse[group.id] ? '' : 'rotate-90'"
+                            class="w-4 h-4 text-gray-500 transition-transform"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              stroke-width="2"
+                              d="M9 5l7 7-7 7"
+                            />
+                          </svg>
+                        </button>
+                        <transition name="fade">
+                          <div v-show="!budgetGroupCollapse[group.id]" class="space-y-3 ml-2">
+                            <div
+                              v-for="category in groupedBudgetCategories.grouped[group.id]"
+                              :key="category.id"
+                              class="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden"
                             >
-                              <span class="text-2xl mr-4">{{ category.emoji }}</span>
-                              <div class="flex-1 text-left">
-                                <h3 class="font-medium text-gray-900">{{ category.name }}</h3>
-                                <div class="mt-2">
-                                  <div class="relative h-2 bg-gray-100 rounded-full overflow-hidden">
-                                    <div 
-                                      class="absolute inset-y-0 left-0 rounded-full transition-all duration-300"
-                                      :class="getProgressBarClass(category.id)"
-                                      :style="{ width: `${getProgressPercentage(category.id, 'expense')}%` }"
-                                    ></div>
-                                    <div 
-                                      v-if="isOverBudget(category.id)"
-                                      class="absolute inset-y-0 left-0 rounded-full bg-red-500/30"
-                                      :style="{ width: `${getOverBudgetPercentage(category.id)}%` }"
-                                    ></div>
-                                  </div>
-                                  <div class="flex items-center justify-between mt-1">
-                                    <div class="text-left">
-                                      <div class="text-lg font-medium" :class="isOverBudget(category.id) ? 'text-red-500' : 'text-gray-900'">
-                                        {{ getCategoryRemainderExpense(category.id) }}
-                                      </div>
-                                      <div class="text-xs text-gray-500">
-                                        Budget: {{ getCategoryBudget(category.id, 'expense') }}
-                                      </div>
-                                      <div class="text-xs text-gray-500">
-                                        Spent: {{ getCategoryExpense(category.id) }}
+                              <button
+                                class="w-full flex items-center p-4 hover:bg-gray-50 active:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                                @click="openCategoryModal(category)"
+                              >
+                                <span class="text-2xl mr-4">{{ category.emoji }}</span>
+                                <div class="flex-1 text-left">
+                                  <h3 class="font-medium text-gray-900 dark:text-gray-100">{{ category.name }}</h3>
+                                  <div class="mt-2">
+                                    <div
+                                      class="relative h-2 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden"
+                                    >
+                                      <div
+                                        class="absolute inset-y-0 left-0 rounded-full transition-all duration-300"
+                                        :class="getProgressBarClass(category.id)"
+                                        :style="{
+                                          width: `${getProgressPercentage(category.id, 'expense')}%`,
+                                        }"
+                                      ></div>
+                                      <div
+                                        v-if="isOverBudget(category.id)"
+                                        class="absolute inset-y-0 left-0 rounded-full bg-red-500/30"
+                                        :style="{
+                                          width: `${getOverBudgetPercentage(category.id)}%`,
+                                        }"
+                                      ></div>
+                                    </div>
+                                    <div class="flex items-center justify-between mt-1">
+                                      <div class="text-left">
+                                        <div
+                                          class="text-lg font-medium"
+                                          :class="isOverBudget(category.id) ? 'text-red-500' : 'text-gray-900 dark:text-gray-100'"
+                                        >
+                                          {{ getCategoryRemainderExpense(category.id) }}
+                                        </div>
+                                        <div class="text-xs text-gray-500 dark:text-gray-300">
+                                          Budget: {{ getCategoryBudget(category.id, 'expense') }}
+                                        </div>
+                                        <div class="text-xs text-gray-500 dark:text-gray-300">
+                                          Spent: {{ getCategoryExpense(category.id) }}
+                                        </div>
                                       </div>
                                     </div>
                                   </div>
                                 </div>
-                              </div>
-                              <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                              </svg>
-                            </button>
+                                <svg
+                                  class="w-5 h-5 text-gray-400"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M9 5l7 7-7 7"
+                                  />
+                                </svg>
+                              </button>
+                            </div>
                           </div>
-                        </div>
-                      </transition>
-                    </template>
-                  </div>
-                  <!-- Ungrouped Budget Categories -->
-                  <div v-for="category in groupedBudgetCategories.ungrouped" :key="category.id" class="bg-white rounded-xl shadow-sm overflow-hidden my-4">
-                    <button 
-                      class="w-full flex items-center p-4 hover:bg-gray-50 active:bg-gray-100 transition-colors"
-                      @click="openCategoryModal(category)"
+                        </transition>
+                      </template>
+                    </div>
+                    <!-- Ungrouped Budget Categories -->
+                    <div
+                      v-for="category in groupedBudgetCategories.ungrouped"
+                      :key="category.id"
+                      class="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden my-4"
                     >
-                      <span class="text-2xl mr-4">{{ category.emoji }}</span>
-                      <div class="flex-1 text-left">
-                        <h3 class="font-medium text-gray-900">{{ category.name }}</h3>
-                        <div class="mt-2">
-                          <div class="relative h-2 bg-gray-100 rounded-full overflow-hidden">
-                            <div 
-                              class="absolute inset-y-0 left-0 rounded-full transition-all duration-300"
-                              :class="getProgressBarClass(category.id)"
-                              :style="{ width: `${getProgressPercentage(category.id, 'expense')}%` }"
-                            ></div>
-                            <div 
-                              v-if="isOverBudget(category.id)"
-                              class="absolute inset-y-0 left-0 rounded-full bg-red-500/30"
-                              :style="{ width: `${getOverBudgetPercentage(category.id)}%` }"
-                            ></div>
-                          </div>
-                          <div class="flex items-center justify-between mt-1">
-                            <div class="text-left">
-                              <div class="text-lg font-medium" :class="isOverBudget(category.id) ? 'text-red-500' : 'text-gray-900'">
-                                {{ getCategoryRemainderExpense(category.id) }}
-                              </div>
-                              <div class="text-xs text-gray-500">
-                                Budget: {{ getCategoryBudget(category.id, 'expense') }}
-                              </div>
-                              <div class="text-xs text-gray-500">
-                                Spent: {{ getCategoryExpense(category.id) }}
+                      <button
+                        class="w-full flex items-center p-4 hover:bg-gray-50 active:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                        @click="openCategoryModal(category)"
+                      >
+                        <span class="text-2xl mr-4">{{ category.emoji }}</span>
+                        <div class="flex-1 text-left">
+                          <h3 class="font-medium text-gray-900 dark:text-gray-100">{{ category.name }}</h3>
+                          <div class="mt-2">
+                            <div class="relative h-2 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
+                              <div
+                                class="absolute inset-y-0 left-0 rounded-full transition-all duration-300"
+                                :class="getProgressBarClass(category.id)"
+                                :style="{
+                                  width: `${getProgressPercentage(category.id, 'expense')}%`,
+                                }"
+                              ></div>
+                              <div
+                                v-if="isOverBudget(category.id)"
+                                class="absolute inset-y-0 left-0 rounded-full bg-red-500/30"
+                                :style="{ width: `${getOverBudgetPercentage(category.id)}%` }"
+                              ></div>
+                            </div>
+                            <div class="flex items-center justify-between mt-1">
+                              <div class="text-left">
+                                <div
+                                  class="text-lg font-medium"
+                                  :class="isOverBudget(category.id) ? 'text-red-500' : 'text-gray-900 dark:text-gray-100'"
+                                >
+                                  {{ getCategoryRemainderExpense(category.id) }}
+                                </div>
+                                <div class="text-xs text-gray-500 dark:text-gray-300">
+                                  Budget: {{ getCategoryBudget(category.id, 'expense') }}
+                                </div>
+                                <div class="text-xs text-gray-500 dark:text-gray-300">
+                                  Spent: {{ getCategoryExpense(category.id) }}
+                                </div>
                               </div>
                             </div>
                           </div>
                         </div>
-                      </div>
-                      <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                      </svg>
-                    </button>
+                        <svg
+                          class="w-5 h-5 text-gray-400"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M9 5l7 7-7 7"
+                          />
+                        </svg>
+                      </button>
+                    </div>
                   </div>
-                </div>
-              </transition>
+                </transition>
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <TransactionModal
-        v-model="showModal"
-        :category="selectedCategory"
-        :transactions="selectedCategoryTransactions"
-      />
+        <TransactionModal
+          v-model="showModal"
+          :category="selectedCategory"
+          :transactions="selectedCategoryTransactions"
+        />
+      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { onMounted, ref, watch, computed } from 'vue'
-import { useTransactionCategoriesStore, type TransactionCategory } from '@/stores/transactionCategories'
+import {
+  useTransactionCategoriesStore,
+  type TransactionCategory,
+} from '@/stores/transactionCategories'
 import { useCategoryBudgetsStore } from '@/stores/categoryBudgets'
 import { useTransactionsStore, type Transaction } from '@/stores/transactions'
 import { useTransactionCategoryGroupsStore } from '@/stores/transactionCategoryGroups'
 import TransactionModal from '@/components/TransactionModal.vue'
+import { Cog6ToothIcon } from '@heroicons/vue/24/outline'
 
 defineOptions({
-  name: 'HomeView'
+  name: 'HomeView',
 })
 
 const store = useTransactionCategoriesStore()
@@ -306,27 +535,42 @@ const apiKeyInput = ref('')
 const apiKeyMissing = ref(false)
 const showIncome = ref(false) // collapsed by default
 const showBudget = ref(true) // expanded by default
+const showConfig = ref(false)
+const theme = ref('light')
+const darkMode = ref(false)
 
 // State for group collapses (collapsed by default)
 const incomeGroupCollapse = ref<Record<string, boolean>>({})
 const budgetGroupCollapse = ref<Record<string, boolean>>({})
 
 // Debug store state changes
-watch(() => store.categories, (newCategories) => {
-  console.log('Categories changed in component:', newCategories)
-}, { deep: true })
+watch(
+  () => store.categories,
+  (newCategories) => {
+    console.log('Categories changed in component:', newCategories)
+  },
+  { deep: true },
+)
 
-watch(() => budgetsStore.budgets, (newBudgets) => {
-  console.log('Budgets changed in component:', newBudgets)
-}, { deep: true })
+watch(
+  () => budgetsStore.budgets,
+  (newBudgets) => {
+    console.log('Budgets changed in component:', newBudgets)
+  },
+  { deep: true },
+)
 
-watch(() => transactionsStore.transactions, (newTransactions) => {
-  console.log('Transactions changed in component:', newTransactions)
-}, { deep: true })
+watch(
+  () => transactionsStore.transactions,
+  (newTransactions) => {
+    console.log('Transactions changed in component:', newTransactions)
+  },
+  { deep: true },
+)
 
 const getIncomeCategories = computed(() => {
   return store.categories
-    .filter(category => transactionsStore.getTotalIncomeForCategory(category.id) > 0)
+    .filter((category) => transactionsStore.getTotalIncomeForCategory(category.id) > 0)
     .sort((a, b) => {
       const receivedA = transactionsStore.getTotalIncomeForCategory(a.id)
       const receivedB = transactionsStore.getTotalIncomeForCategory(b.id)
@@ -334,8 +578,8 @@ const getIncomeCategories = computed(() => {
         return receivedB - receivedA // Sort by received value high to low
       }
       // If received values are equal, categories with a budget come first
-      const budgetA = budgetsStore.budgets.find(budget => budget.transactionCategoryId === a.id)
-      const budgetB = budgetsStore.budgets.find(budget => budget.transactionCategoryId === b.id)
+      const budgetA = budgetsStore.budgets.find((budget) => budget.transactionCategoryId === a.id)
+      const budgetB = budgetsStore.budgets.find((budget) => budget.transactionCategoryId === b.id)
       if (budgetA && !budgetB) return -1
       if (!budgetA && budgetB) return 1
       return 0
@@ -344,10 +588,10 @@ const getIncomeCategories = computed(() => {
 
 const getExpenseCategories = computed(() => {
   return store.categories
-    .filter(category => transactionsStore.getTotalExpenseForCategory(category.id) > 0)
+    .filter((category) => transactionsStore.getTotalExpenseForCategory(category.id) > 0)
     .sort((a, b) => {
-      const budgetA = budgetsStore.budgets.find(budget => budget.transactionCategoryId === a.id)
-      const budgetB = budgetsStore.budgets.find(budget => budget.transactionCategoryId === b.id)
+      const budgetA = budgetsStore.budgets.find((budget) => budget.transactionCategoryId === a.id)
+      const budgetB = budgetsStore.budgets.find((budget) => budget.transactionCategoryId === b.id)
       const spentA = transactionsStore.getTotalExpenseForCategory(a.id)
       const spentB = transactionsStore.getTotalExpenseForCategory(b.id)
 
@@ -380,23 +624,27 @@ const getExpenseCategories = computed(() => {
 const totalAvailableFromBudget = computed(() => {
   // Sum all expense budgets (transactionType: 'debit')
   const totalBudget = budgetsStore.budgets
-    .filter(b => b.transactionType === 'debit')
+    .filter((b) => b.transactionType === 'debit')
     .reduce((sum, b) => sum + b.amount.amount, 0)
   // Sum all actual expenses (only negative transactions, as positive values)
-  const totalSpent = store.categories
-    .reduce((sum, category) => sum + transactionsStore.getTotalExpenseForCategory(category.id), 0)
+  const totalSpent = store.categories.reduce(
+    (sum, category) => sum + transactionsStore.getTotalExpenseForCategory(category.id),
+    0,
+  )
   return totalBudget - totalSpent
 })
 
 const totalBudgeted = computed(() => {
   return budgetsStore.budgets
-    .filter(b => b.transactionType === 'debit')
+    .filter((b) => b.transactionType === 'debit')
     .reduce((sum, b) => sum + b.amount.amount, 0)
 })
 
 const totalSpent = computed(() => {
-  return store.categories
-    .reduce((sum, category) => sum + transactionsStore.getTotalExpenseForCategory(category.id), 0)
+  return store.categories.reduce(
+    (sum, category) => sum + transactionsStore.getTotalExpenseForCategory(category.id),
+    0,
+  )
 })
 
 function formatCurrency(amount: number): string {
@@ -406,7 +654,9 @@ function formatCurrency(amount: number): string {
 
 function getCategoryBudget(categoryId: string, mode: 'income' | 'expense'): string {
   const type = mode === 'income' ? 'credit' : 'debit'
-  const budget = budgetsStore.budgets.find(b => b.transactionCategoryId === categoryId && b.transactionType === type)
+  const budget = budgetsStore.budgets.find(
+    (b) => b.transactionCategoryId === categoryId && b.transactionType === type,
+  )
   const spent = Math.abs(transactionsStore.getTotalSpentForCategory(categoryId))
   if (!budget && spent > 0) return formatCurrency(0)
   if (!budget) return 'No budget'
@@ -415,7 +665,7 @@ function getCategoryBudget(categoryId: string, mode: 'income' | 'expense'): stri
 
 function getCategorySpent(categoryId: string): string {
   const spent = Math.abs(transactionsStore.getTotalSpentForCategory(categoryId))
-  const budget = budgetsStore.budgets.find(b => b.transactionCategoryId === categoryId)
+  const budget = budgetsStore.budgets.find((b) => b.transactionCategoryId === categoryId)
   if (!budget && spent === 0) return 'No budget'
   return formatCurrency(spent)
 }
@@ -434,7 +684,7 @@ function getCategoryExpense(categoryId: string): string {
 
 function getCategoryRemainder(categoryId: string): string {
   const spent = Math.abs(transactionsStore.getTotalSpentForCategory(categoryId))
-  const budget = budgetsStore.budgets.find(b => b.transactionCategoryId === categoryId)
+  const budget = budgetsStore.budgets.find((b) => b.transactionCategoryId === categoryId)
   if (!budget && spent > 0) return formatCurrency(-spent)
   if (!budget) return 'No budget'
   const remainder = budget.amount.amount - spent
@@ -443,7 +693,9 @@ function getCategoryRemainder(categoryId: string): string {
 
 function getCategoryRemainderExpense(categoryId: string): string {
   // Only use expense budget (debit) and actual expenses
-  const budget = budgetsStore.budgets.find(b => b.transactionCategoryId === categoryId && b.transactionType === 'debit')
+  const budget = budgetsStore.budgets.find(
+    (b) => b.transactionCategoryId === categoryId && b.transactionType === 'debit',
+  )
   const spent = transactionsStore.getTotalExpenseForCategory(categoryId)
   if (!budget && spent > 0) return formatCurrency(-spent)
   if (!budget) return 'No budget'
@@ -453,7 +705,7 @@ function getCategoryRemainderExpense(categoryId: string): string {
 
 function isOverBudget(categoryId: string): boolean {
   const spent = Math.abs(transactionsStore.getTotalSpentForCategory(categoryId))
-  const budget = budgetsStore.budgets.find(b => b.transactionCategoryId === categoryId)
+  const budget = budgetsStore.budgets.find((b) => b.transactionCategoryId === categoryId)
   if (!budget && spent > 0) return true
   if (!budget) return false
   return spent > budget.amount.amount
@@ -466,7 +718,7 @@ function getProgressPercentage(categoryId: string, mode: 'income' | 'expense'): 
   } else {
     value = transactionsStore.getTotalExpenseForCategory(categoryId)
   }
-  const budget = budgetsStore.budgets.find(b => b.transactionCategoryId === categoryId)
+  const budget = budgetsStore.budgets.find((b) => b.transactionCategoryId === categoryId)
   if (!budget) {
     // If there are transactions but no budget, show full bar
     return value > 0 ? 100 : 0
@@ -476,7 +728,7 @@ function getProgressPercentage(categoryId: string, mode: 'income' | 'expense'): 
 
 function getOverBudgetPercentage(categoryId: string): number {
   const spent = Math.abs(transactionsStore.getTotalSpentForCategory(categoryId))
-  const budget = budgetsStore.budgets.find(b => b.transactionCategoryId === categoryId)
+  const budget = budgetsStore.budgets.find((b) => b.transactionCategoryId === categoryId)
   if (!budget) return 0
   const overBudget = spent - budget.amount.amount
   if (overBudget <= 0) return 0
@@ -500,9 +752,10 @@ function openCategoryModal(category: { id: string; name: string }) {
 const groupedIncomeCategories = computed(() => {
   const grouped: Record<string, TransactionCategory[]> = {}
   const ungrouped: TransactionCategory[] = []
-  getIncomeCategories.value.forEach(category => {
+  getIncomeCategories.value.forEach((category) => {
     if (category.transactionCategoryGroupId) {
-      if (!grouped[category.transactionCategoryGroupId]) grouped[category.transactionCategoryGroupId] = []
+      if (!grouped[category.transactionCategoryGroupId])
+        grouped[category.transactionCategoryGroupId] = []
       grouped[category.transactionCategoryGroupId].push(category)
     } else {
       ungrouped.push(category)
@@ -515,15 +768,37 @@ const groupedIncomeCategories = computed(() => {
 const groupedBudgetCategories = computed(() => {
   const grouped: Record<string, TransactionCategory[]> = {}
   const ungrouped: TransactionCategory[] = []
-  getExpenseCategories.value.forEach(category => {
+  getExpenseCategories.value.forEach((category) => {
     if (category.transactionCategoryGroupId) {
-      if (!grouped[category.transactionCategoryGroupId]) grouped[category.transactionCategoryGroupId] = []
+      if (!grouped[category.transactionCategoryGroupId])
+        grouped[category.transactionCategoryGroupId] = []
       grouped[category.transactionCategoryGroupId].push(category)
     } else {
       ungrouped.push(category)
     }
   })
   return { grouped, ungrouped }
+})
+
+function applyTheme(newTheme: string) {
+  if (typeof window !== 'undefined') {
+    const html = document.documentElement
+    if (newTheme === 'dark') {
+      html.classList.add('dark')
+    } else {
+      html.classList.remove('dark')
+    }
+  }
+}
+
+function toggleDarkMode() {
+  theme.value = darkMode.value ? 'dark' : 'light'
+  localStorage.setItem('theme', theme.value)
+  applyTheme(theme.value)
+}
+
+watch(theme, (newTheme) => {
+  applyTheme(newTheme)
 })
 
 onMounted(() => {
@@ -539,6 +814,16 @@ onMounted(() => {
     transactionsStore.fetchTransactions()
     categoryGroupsStore.fetchGroups()
   }
+  // Load theme from localStorage
+  const storedTheme = localStorage.getItem('theme')
+  if (storedTheme === 'dark') {
+    theme.value = 'dark'
+    darkMode.value = true
+  } else {
+    theme.value = 'light'
+    darkMode.value = false
+  }
+  applyTheme(theme.value)
 })
 
 function saveApiKey() {
@@ -550,4 +835,3 @@ function saveApiKey() {
   }
 }
 </script>
-
