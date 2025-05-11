@@ -44,21 +44,7 @@
             <p class="text-gray-500">No categories found</p>
           </div>
           <div v-else class="space-y-6">
-            <!-- Stat Cards -->
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-              <div class="bg-white rounded-xl shadow-sm p-4 flex flex-col items-center">
-                <div class="text-xs text-gray-500 mb-1">Total Budgeted</div>
-                <div class="text-2xl font-semibold text-gray-900">{{ formatCurrency(totalBudgeted) }}</div>
-              </div>
-              <div class="bg-white rounded-xl shadow-sm p-4 flex flex-col items-center">
-                <div class="text-xs text-gray-500 mb-1">Total Spent</div>
-                <div class="text-2xl font-semibold text-gray-900">{{ formatCurrency(totalSpent) }}</div>
-              </div>
-              <div class="bg-white rounded-xl shadow-sm p-4 flex flex-col items-center">
-                <div class="text-xs text-gray-500 mb-1">Total Available</div>
-                <div class="text-2xl font-semibold text-gray-900">{{ formatCurrency(totalAvailableFromBudget) }}</div>
-              </div>
-            </div>
+          
 
             <!-- Income Section -->
             <div>
@@ -74,7 +60,7 @@
                   <div v-for="group in categoryGroupsStore.groups" :key="group.id">
                     <template v-if="groupedIncomeCategories.grouped[group.id] && groupedIncomeCategories.grouped[group.id].length > 0">
                       <button @click="incomeGroupCollapse[group.id] = !incomeGroupCollapse[group.id]" class="flex items-center w-full mb-1 group">
-                        <span class="text-base font-semibold text-gray-800 mr-2">{{ group.name }}</span>
+                        <span class="text-base font-semibold text-gray-800 mr-2">{{ group.name }} Group</span>
                         <svg :class="incomeGroupCollapse[group.id] ? '' : 'rotate-90'" class="w-4 h-4 text-gray-500 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                         </svg>
@@ -154,6 +140,23 @@
               </transition>
             </div>
 
+
+              <!-- Stat Cards -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+              <div class="bg-white rounded-xl shadow-sm p-4 flex flex-col items-center">
+                <div class="text-xs text-gray-500 mb-1">Total Budgeted</div>
+                <div class="text-2xl font-semibold text-gray-900">{{ formatCurrency(totalBudgeted) }}</div>
+              </div>
+              <div class="bg-white rounded-xl shadow-sm p-4 flex flex-col items-center">
+                <div class="text-xs text-gray-500 mb-1">Total Spent</div>
+                <div class="text-2xl font-semibold text-gray-900">{{ formatCurrency(totalSpent) }}</div>
+              </div>
+              <div class="bg-white rounded-xl shadow-sm p-4 flex flex-col items-center">
+                <div class="text-xs text-gray-500 mb-1">Total Available</div>
+                <div class="text-2xl font-semibold text-gray-900">{{ formatCurrency(totalAvailableFromBudget) }}</div>
+              </div>
+            </div>
+
             <!-- Budget Section -->
             <div>
               <button @click="showBudget = !showBudget" class="flex items-center w-full mb-2 group">
@@ -168,7 +171,7 @@
                   <div v-for="group in categoryGroupsStore.groups" :key="group.id">
                     <template v-if="groupedBudgetCategories.grouped[group.id] && groupedBudgetCategories.grouped[group.id].length > 0">
                       <button @click="budgetGroupCollapse[group.id] = !budgetGroupCollapse[group.id]" class="flex items-center w-full mb-1 group">
-                        <span class="text-base font-semibold text-gray-800 mr-2">{{ group.name }}</span>
+                        <span class="text-base font-semibold text-gray-800 mr-2">{{ group.name }} Group</span>
                         <svg :class="budgetGroupCollapse[group.id] ? '' : 'rotate-90'" class="w-4 h-4 text-gray-500 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                         </svg>
