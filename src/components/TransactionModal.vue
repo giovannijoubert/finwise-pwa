@@ -2,7 +2,7 @@
   <div v-if="modelValue" 
        class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center z-50"
        @click="close">
-    <div class="bg-white w-full sm:w-[480px] sm:rounded-t-2xl sm:rounded-b-2xl max-h-[90vh] flex flex-col"
+    <div class="bg-white w-full sm:w-[480px] sm:rounded-t-2xl sm:rounded-b-2xl max-h-[90vh] flex flex-col pb-12 md:pb-2"
          @click.stop>
       <div class="p-4 border-b border-gray-200 flex justify-between items-center">
         <div>
