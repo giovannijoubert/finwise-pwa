@@ -63,6 +63,13 @@
             ></div>
           </label>
         </div>
+        <!-- Log Out Button -->
+        <button
+          class="mt-6 w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
+          @click="logout"
+        >
+          Log Out
+        </button>
       </div>
     </div>
   </transition>
@@ -75,4 +82,9 @@ defineProps({
   includeCollapsed: Boolean,
 })
 defineEmits(['update:modelValue', 'update:darkMode', 'toggle-dark-mode', 'update:includeCollapsed'])
+
+function logout() {
+  localStorage.removeItem('api_key')
+  window.location.reload()
+}
 </script> 
