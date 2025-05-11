@@ -98,92 +98,7 @@
                     "
                     class="space-y-3"
                   >
-                    <!-- Grouped Income Categories -->
-                    <div class="ml-4" v-for="group in categoryGroupsStore.groups" :key="group.id">
-                      <template
-                        v-if="
-                          groupedIncomeCategories.grouped[group.id] &&
-                          groupedIncomeCategories.grouped[group.id].length > 0
-                        "
-                      >
-                        <button
-                          @click="incomeGroupCollapse[group.id] = !incomeGroupCollapse[group.id]"
-                          class="flex items-center w-full mb-1 group"
-                        >
-                          <span class="text-base font-semibold text-gray-800 dark:text-gray-200 mr-2"
-                            >{{ group.name }} Group</span
-                          >
-                          <svg
-                            :class="incomeGroupCollapse[group.id] ? '' : 'rotate-90'"
-                            class="w-4 h-4 text-gray-500 transition-transform"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              stroke-linecap="round"
-                              stroke-linejoin="round"
-                              stroke-width="2"
-                              d="M9 5l7 7-7 7"
-                            />
-                          </svg>
-                        </button>
-                        <transition name="fade">
-                          <div v-show="!incomeGroupCollapse[group.id]" class="space-y-3 ml-2">
-                            <div
-                              v-for="category in groupedIncomeCategories.grouped[group.id]"
-                              :key="category.id"
-                              class="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden"
-                            >
-                              <button
-                                class="w-full flex items-center p-4 hover:bg-gray-50 active:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                                @click="openCategoryModal(category)"
-                              >
-                                <span class="text-2xl mr-4">{{ category.emoji }}</span>
-                                <div class="flex-1 text-left">
-                                  <h3 class="font-medium text-gray-900 dark:text-gray-100">{{ category.name }}</h3>
-                                  <div class="mt-2">
-                                    <div
-                                      class="relative h-2 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden"
-                                    >
-                                      <div
-                                        class="absolute inset-y-0 left-0 rounded-full transition-all duration-300 bg-emerald-500"
-                                        :style="{
-                                          width: `${getProgressPercentage(category.id, 'income')}%`,
-                                        }"
-                                      ></div>
-                                    </div>
-                                    <div class="flex items-center justify-between mt-1">
-                                      <div class="text-left">
-                                        <div class="text-lg font-medium text-gray-900 dark:text-gray-100">
-                                          {{ getCategoryIncome(category.id) }}
-                                        </div>
-                                        <div class="text-xs text-gray-500 dark:text-gray-300">
-                                          Expected: {{ getCategoryBudget(category.id, 'income') }}
-                                        </div>
-                                      </div>
-                                    </div>
-                                  </div>
-                                </div>
-                                <svg
-                                  class="w-5 h-5 text-gray-400"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  viewBox="0 0 24 24"
-                                >
-                                  <path
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    stroke-width="2"
-                                    d="M9 5l7 7-7 7"
-                                  />
-                                </svg>
-                              </button>
-                            </div>
-                          </div>
-                        </transition>
-                      </template>
-                    </div>
+                  
                     <!-- Ungrouped Income Categories -->
                     <div
                       v-for="category in groupedIncomeCategories.ungrouped"
@@ -196,7 +111,9 @@
                       >
                         <span class="text-2xl mr-4">{{ category.emoji }}</span>
                         <div class="flex-1 text-left">
-                          <h3 class="font-medium text-gray-900 dark:text-gray-100">{{ category.name }}</h3>
+                          <h3 class="font-medium text-gray-900 dark:text-gray-100 flex items-center">
+                            {{ category.name }}
+                          </h3>
                           <div class="mt-2">
                             <div
                               class="relative h-2 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden"
@@ -254,6 +171,16 @@
                   <div class="text-2xl font-semibold">{{ formatCurrency(totalAvailableFromBudget) }}</div>
                 </div>
               </div>
+              <!-- Hidden groups chip row -->
+              <div v-if="hiddenGroups.length > 0" class="mb-4 flex flex-wrap gap-2 items-center">
+                <span class="text-xs text-gray-500 mr-2">Hidden groups:</span>
+                <span v-for="groupId in hiddenGroups" :key="groupId" class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200">
+                  {{ categoryGroupsStore.groups.find(g => g.id === groupId)?.name || 'Unknown' }}
+                  <button class="ml-1 p-0.5 rounded hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors" @click="unhideGroup(groupId)" title="Show group">
+                    <EyeIcon class="w-4 h-4 text-gray-500" />
+                  </button>
+                </span>
+              </div>
 
               <!-- Budget Section -->
               <div>
@@ -286,37 +213,16 @@
                     "
                   >
                     <!-- Grouped Budget Categories -->
-                    <div class="ml-4" v-for="group in categoryGroupsStore.groups" :key="group.id">
+                    <div v-for="group in categoryGroupsStore.groups" :key="group.id">
                       <template
                         v-if="
                           groupedBudgetCategories.grouped[group.id] &&
                           groupedBudgetCategories.grouped[group.id].length > 0
                         "
                       >
-                        <button
-                          @click="budgetGroupCollapse[group.id] = !budgetGroupCollapse[group.id]"
-                          class="flex items-center w-full mb-1 group"
-                        >
-                          <span class="text-base font-semibold text-gray-800 dark:text-gray-200 mr-2"
-                            >{{ group.name }} Group</span
-                          >
-                          <svg
-                            :class="budgetGroupCollapse[group.id] ? '' : 'rotate-90'"
-                            class="w-4 h-4 text-gray-500 transition-transform"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              stroke-linecap="round"
-                              stroke-linejoin="round"
-                              stroke-width="2"
-                              d="M9 5l7 7-7 7"
-                            />
-                          </svg>
-                        </button>
+                       
                         <transition name="fade">
-                          <div v-show="!budgetGroupCollapse[group.id]" class="space-y-3 ml-2">
+                          <div v-show="!budgetGroupCollapse[group.id]" class="space-y-3 ">
                             <div
                               v-for="category in groupedBudgetCategories.grouped[group.id]"
                               :key="category.id"
@@ -328,7 +234,20 @@
                               >
                                 <span class="text-2xl mr-4">{{ category.emoji }}</span>
                                 <div class="flex-1 text-left">
-                                  <h3 class="font-medium text-gray-900 dark:text-gray-100">{{ category.name }}</h3>
+                                  <h3 class="font-medium text-gray-900 dark:text-gray-100 flex items-center">
+                                    {{ category.name }}
+                                    <span v-if="category.transactionCategoryGroupId" class="ml-auto opacity-50 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 relative group">
+                                      {{ categoryGroupsStore.groups.find(g => g.id === category.transactionCategoryGroupId)?.name }}
+                                      <button
+                                        v-if="groupedBudgetCategories.grouped[category.transactionCategoryGroupId]"
+                                        class="ml-1 p-0.5 rounded hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors"
+                                        @click.stop="hideGroup(category.transactionCategoryGroupId)"
+                                        title="Hide group"
+                                      >
+                                        <EyeSlashIcon class="w-4 h-4 text-gray-500" />
+                                      </button>
+                                    </span>
+                                  </h3>
                                   <div class="mt-2">
                                     <div
                                       class="relative h-2 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden"
@@ -389,7 +308,7 @@
                     <div
                       v-for="category in groupedBudgetCategories.ungrouped"
                       :key="category.id"
-                      class="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden my-4"
+                      class="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden my-3"
                     >
                       <button
                         class="w-full flex items-center p-4 hover:bg-gray-50 active:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
@@ -397,7 +316,20 @@
                       >
                         <span class="text-2xl mr-4">{{ category.emoji }}</span>
                         <div class="flex-1 text-left">
-                          <h3 class="font-medium text-gray-900 dark:text-gray-100">{{ category.name }}</h3>
+                          <h3 class="font-medium text-gray-900 dark:text-gray-100 flex items-center">
+                            {{ category.name }} 
+                            <span v-if="category.transactionCategoryGroupId" class="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 relative group">
+                              {{ categoryGroupsStore.groups.find(g => g.id === category.transactionCategoryGroupId)?.name }}
+                              <button
+                                v-if="groupedBudgetCategories.grouped[category.transactionCategoryGroupId]?.[0]?.id === category.id"
+                                class="ml-1 p-0.5 rounded hover:bg-blue-200 dark:hover:bg-blue-800 transition-colors invisible group-hover:visible"
+                                @click.stop="hideGroup(category.transactionCategoryGroupId)"
+                                title="Hide group"
+                              >
+                                <EyeSlashIcon class="w-4 h-4 text-blue-500" />
+                              </button>
+                            </span>
+                          </h3>
                           <div class="mt-2">
                             <div class="relative h-2 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
                               <div
@@ -475,6 +407,7 @@ import { useTransactionCategoryGroupsStore } from '@/stores/transactionCategoryG
 import TransactionModal from '@/components/TransactionModal.vue'
 import { Cog6ToothIcon } from '@heroicons/vue/24/outline'
 import SettingsModal from '@/components/SettingsModal.vue'
+import { EyeIcon, EyeSlashIcon } from '@heroicons/vue/24/outline'
 
 defineOptions({
   name: 'HomeView',
@@ -501,6 +434,9 @@ const includeCollapsed = ref(true)
 // State for group collapses (collapsed by default)
 const incomeGroupCollapse = ref<Record<string, boolean>>({})
 const budgetGroupCollapse = ref<Record<string, boolean>>({})
+
+// Replace hiddenCategories with hiddenGroups
+const hiddenGroups = ref<string[]>([])
 
 // Debug store state changes
 watch(
@@ -586,6 +522,8 @@ function isCategoryIncluded(category: TransactionCategory, mode: 'income' | 'exp
   // Only check for grouped categories
   const groupId = category.transactionCategoryGroupId;
   if (!groupId) return true;
+  // Exclude if group is hidden
+  if (isGroupHidden(groupId)) return false;
   if (mode === 'income') {
     return !incomeGroupCollapse.value[groupId];
   } else {
@@ -635,13 +573,6 @@ function getCategoryBudget(categoryId: string, mode: 'income' | 'expense'): stri
   return formatCurrency(budget.amount.amount)
 }
 
-function getCategorySpent(categoryId: string): string {
-  const spent = Math.abs(transactionsStore.getTotalSpentForCategory(categoryId))
-  const budget = budgetsStore.budgets.find((b) => b.transactionCategoryId === categoryId)
-  if (!budget && spent === 0) return 'No budget'
-  return formatCurrency(spent)
-}
-
 function getCategoryIncome(categoryId: string): string {
   const income = transactionsStore.getTotalIncomeForCategory(categoryId)
   if (income === 0) return 'No income'
@@ -652,15 +583,6 @@ function getCategoryExpense(categoryId: string): string {
   const expense = transactionsStore.getTotalExpenseForCategory(categoryId)
   if (expense === 0) return 'No expense'
   return formatCurrency(expense)
-}
-
-function getCategoryRemainder(categoryId: string): string {
-  const spent = Math.abs(transactionsStore.getTotalSpentForCategory(categoryId))
-  const budget = budgetsStore.budgets.find((b) => b.transactionCategoryId === categoryId)
-  if (!budget && spent > 0) return formatCurrency(-spent)
-  if (!budget) return 'No budget'
-  const remainder = budget.amount.amount - spent
-  return formatCurrency(remainder)
 }
 
 function getCategoryRemainderExpense(categoryId: string): string {
@@ -725,6 +647,7 @@ const groupedIncomeCategories = computed(() => {
   const grouped: Record<string, TransactionCategory[]> = {}
   const ungrouped: TransactionCategory[] = []
   getIncomeCategories.value.forEach((category) => {
+    if (isCategoryHidden(category)) return
     if (category.transactionCategoryGroupId) {
       if (!grouped[category.transactionCategoryGroupId])
         grouped[category.transactionCategoryGroupId] = []
@@ -741,6 +664,7 @@ const groupedBudgetCategories = computed(() => {
   const grouped: Record<string, TransactionCategory[]> = {}
   const ungrouped: TransactionCategory[] = []
   getExpenseCategories.value.forEach((category) => {
+    if (isCategoryHidden(category)) return
     if (category.transactionCategoryGroupId) {
       if (!grouped[category.transactionCategoryGroupId])
         grouped[category.transactionCategoryGroupId] = []
@@ -775,7 +699,7 @@ watch(theme, (newTheme) => {
 
 onMounted(() => {
   apiKey.value = localStorage.getItem('api_key')
-  apiKeyMissing.value = !apiKey.value
+  apiKeyMissing.value = !apiKey.value ? true : false
   if (!apiKeyMissing.value) {
     // Get first day of current month in UTC
     const now = new Date()
@@ -801,6 +725,13 @@ onMounted(() => {
   if (storedIncludeCollapsed !== null) {
     includeCollapsed.value = storedIncludeCollapsed === 'true'
   }
+  // On mount, load hidden groups from localStorage
+  const storedHiddenGroups = localStorage.getItem('hiddenGroups')
+  if (storedHiddenGroups) {
+    try {
+      hiddenGroups.value = JSON.parse(storedHiddenGroups)
+    } catch {}
+  }
 })
 
 watch(includeCollapsed, (val) => {
@@ -815,4 +746,28 @@ function saveApiKey() {
     window.location.reload()
   }
 }
+
+// Watch for changes to hiddenGroups and persist
+watch(hiddenGroups, (val) => {
+  localStorage.setItem('hiddenGroups', JSON.stringify(val))
+}, { deep: true })
+
+// Helper to hide/unhide groups
+function hideGroup(groupId: string) {
+  if (!hiddenGroups.value.includes(groupId)) {
+    hiddenGroups.value.push(groupId)
+  }
+}
+function unhideGroup(groupId: string) {
+  hiddenGroups.value = hiddenGroups.value.filter(id => id !== groupId)
+}
+function isGroupHidden(groupId: string): boolean {
+  return hiddenGroups.value.includes(groupId)
+}
+
+// Helper to check if a category is in a hidden group
+function isCategoryHidden(category: TransactionCategory): boolean {
+  return !!category.transactionCategoryGroupId && isGroupHidden(category.transactionCategoryGroupId)
+}
 </script>
+
