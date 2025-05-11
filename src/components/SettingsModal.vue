@@ -45,6 +45,24 @@
             ></div>
           </label>
         </div>
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-gray-800 dark:text-gray-200">Include collapsed groups in stat cards</span>
+          <label class="inline-flex relative items-center cursor-pointer">
+            <input
+              type="checkbox"
+              class="sr-only peer"
+              :checked="includeCollapsed"
+              @change="$emit('update:includeCollapsed', ($event.target as HTMLInputElement)?.checked)"
+            />
+            <div
+              class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-500 dark:bg-gray-700 rounded-full peer peer-checked:bg-blue-600 transition-colors"
+            ></div>
+            <div
+              class="absolute left-1 top-1 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-full h-4 w-4 transition-transform"
+              :class="includeCollapsed ? 'translate-x-5' : ''"
+            ></div>
+          </label>
+        </div>
       </div>
     </div>
   </transition>
@@ -54,6 +72,7 @@
 defineProps({
   modelValue: Boolean,
   darkMode: Boolean,
+  includeCollapsed: Boolean,
 })
-defineEmits(['update:modelValue', 'update:darkMode', 'toggle-dark-mode'])
+defineEmits(['update:modelValue', 'update:darkMode', 'toggle-dark-mode', 'update:includeCollapsed'])
 </script> 

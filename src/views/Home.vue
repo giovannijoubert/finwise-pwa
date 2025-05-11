@@ -39,6 +39,7 @@
           <SettingsModal
             v-model="showConfig"
             v-model:darkMode="darkMode"
+            v-model:includeCollapsed="includeCollapsed"
             @toggle-dark-mode="toggleDarkMode"
           />
 
@@ -466,8 +467,8 @@
 import { onMounted, ref, watch, computed } from 'vue'
 import {
   useTransactionCategoriesStore,
-  type TransactionCategory,
 } from '@/stores/transactionCategories'
+import type { TransactionCategory } from '@/stores/transactionCategories'
 import { useCategoryBudgetsStore } from '@/stores/categoryBudgets'
 import { useTransactionsStore, type Transaction } from '@/stores/transactions'
 import { useTransactionCategoryGroupsStore } from '@/stores/transactionCategoryGroups'
@@ -495,6 +496,7 @@ const showBudget = ref(true) // expanded by default
 const showConfig = ref(false)
 const theme = ref('light')
 const darkMode = ref(false)
+const includeCollapsed = ref(true)
 
 // State for group collapses (collapsed by default)
 const incomeGroupCollapse = ref<Record<string, boolean>>({})
@@ -578,30 +580,43 @@ const getExpenseCategories = computed(() => {
     })
 })
 
-const totalAvailableFromBudget = computed(() => {
-  // Sum all expense budgets (transactionType: 'debit')
-  const totalBudget = budgetsStore.budgets
-    .filter((b) => b.transactionType === 'debit')
-    .reduce((sum, b) => sum + b.amount.amount, 0)
-  // Sum all actual expenses (only negative transactions, as positive values)
-  const totalSpent = store.categories.reduce(
-    (sum, category) => sum + transactionsStore.getTotalExpenseForCategory(category.id),
-    0,
-  )
-  return totalBudget - totalSpent
-})
+// Helper to determine if a category should be included in tally
+function isCategoryIncluded(category: TransactionCategory, mode: 'income' | 'expense'): boolean {
+  if (includeCollapsed.value) return true;
+  // Only check for grouped categories
+  const groupId = category.transactionCategoryGroupId;
+  if (!groupId) return true;
+  if (mode === 'income') {
+    return !incomeGroupCollapse.value[groupId];
+  } else {
+    return !budgetGroupCollapse.value[groupId];
+  }
+}
 
 const totalBudgeted = computed(() => {
+  // Only sum budgets for categories that are included
+  const includedCategoryIds = store.categories.filter(c => isCategoryIncluded(c, 'expense')).map(c => c.id)
   return budgetsStore.budgets
-    .filter((b) => b.transactionType === 'debit')
+    .filter((b) => b.transactionType === 'debit' && includedCategoryIds.includes(b.transactionCategoryId))
     .reduce((sum, b) => sum + b.amount.amount, 0)
 })
 
 const totalSpent = computed(() => {
-  return store.categories.reduce(
-    (sum, category) => sum + transactionsStore.getTotalExpenseForCategory(category.id),
-    0,
-  )
+  return store.categories
+    .filter((c) => isCategoryIncluded(c, 'expense'))
+    .reduce((sum, category) => sum + transactionsStore.getTotalExpenseForCategory(category.id), 0)
+})
+
+const totalAvailableFromBudget = computed(() => {
+  // Only sum budgets and spent for included categories
+  const includedCategoryIds = store.categories.filter(c => isCategoryIncluded(c, 'expense')).map(c => c.id)
+  const totalBudget = budgetsStore.budgets
+    .filter((b) => b.transactionType === 'debit' && includedCategoryIds.includes(b.transactionCategoryId))
+    .reduce((sum, b) => sum + b.amount.amount, 0)
+  const totalSpent = store.categories
+    .filter((c) => isCategoryIncluded(c, 'expense'))
+    .reduce((sum, category) => sum + transactionsStore.getTotalExpenseForCategory(category.id), 0)
+  return totalBudget - totalSpent
 })
 
 function formatCurrency(amount: number): string {
@@ -781,6 +796,15 @@ onMounted(() => {
     darkMode.value = false
   }
   applyTheme(theme.value)
+  // Persist includeCollapsed in localStorage
+  const storedIncludeCollapsed = localStorage.getItem('includeCollapsed')
+  if (storedIncludeCollapsed !== null) {
+    includeCollapsed.value = storedIncludeCollapsed === 'true'
+  }
+})
+
+watch(includeCollapsed, (val) => {
+  localStorage.setItem('includeCollapsed', val ? 'true' : 'false')
 })
 
 function saveApiKey() {
