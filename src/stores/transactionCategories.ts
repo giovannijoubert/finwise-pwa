@@ -1,7 +1,7 @@
 import { ref } from 'vue'
 import { defineStore } from 'pinia'
 
-interface TransactionCategory {
+export interface TransactionCategory {
   id: string
   createdAt: string
   updatedAt: string
