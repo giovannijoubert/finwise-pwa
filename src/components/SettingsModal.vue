@@ -37,7 +37,7 @@
               @change="$emit('update:darkMode', ($event.target as HTMLInputElement)?.checked); $emit('toggle-dark-mode')"
             />
             <div
-              class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-500 dark:bg-gray-700 rounded-full peer peer-checked:bg-blue-600 transition-colors"
+              class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-emerald-500 dark:bg-gray-700 rounded-full peer peer-checked:bg-emerald-600 transition-colors"
             ></div>
             <div
               class="absolute left-1 top-1 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-full h-4 w-4 transition-transform"
@@ -55,7 +55,7 @@
               @change="$emit('update:includeCollapsed', ($event.target as HTMLInputElement)?.checked)"
             />
             <div
-              class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-500 dark:bg-gray-700 rounded-full peer peer-checked:bg-blue-600 transition-colors"
+              class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-emerald-500 dark:bg-gray-700 rounded-full peer peer-checked:bg-emerald-600 transition-colors"
             ></div>
             <div
               class="absolute left-1 top-1 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-full h-4 w-4 transition-transform"

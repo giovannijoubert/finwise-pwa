@@ -10,11 +10,11 @@
             v-model="apiKeyInput"
             type="text"
             placeholder="Paste your API key here"
-            class="w-full border border-gray-300 dark:border-gray-700 rounded-lg px-4 py-2 mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-gray-100"
+            class="w-full border border-gray-300 dark:border-gray-700 rounded-lg px-4 py-2 mb-4 focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:bg-gray-800 dark:text-gray-100"
           />
           <button
             @click="saveApiKey"
-            class="w-full bg-blue-600 text-white rounded-lg px-4 py-2 font-semibold hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800 transition-colors"
+            class="w-full bg-emerald-600 text-white rounded-lg px-4 py-2 font-semibold hover:bg-emerald-700 dark:bg-emerald-700 dark:hover:bg-emerald-800 transition-colors"
           >
             Save API Key
           </button>
@@ -27,13 +27,22 @@
               <h1 class="text-2xl font-semibold">Budget Overview</h1>
               <p class="text-sm text-gray-500 mt-1">Track your income and expenses</p>
             </div>
-            <button
-              @click="showConfig = true"
-              class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors"
-              aria-label="Settings"
-            >
-              <Cog6ToothIcon class="w-6 h-6 text-gray-500 dark:text-gray-300" />
-            </button>
+            <div class="flex items-center gap-2">
+              <button
+                @click="refreshAll"
+                class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors"
+                aria-label="Refresh"
+              >
+                <ArrowPathIcon :class="['w-6 h-6', isRefreshing ? 'animate-spin text-emerald-500' : 'text-gray-500 dark:text-gray-300']" />
+              </button>
+              <button
+                @click="showConfig = true"
+                class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors"
+                aria-label="Settings"
+              >
+                <Cog6ToothIcon class="w-6 h-6 text-gray-500 dark:text-gray-300" />
+              </button>
+            </div>
           </header>
           <!-- Config Modal -->
           <SettingsModal
@@ -43,11 +52,18 @@
             @toggle-dark-mode="toggleDarkMode"
           />
 
+          <transition name="fade">
+            <div v-if="isRefreshing" class="flex items-center justify-center py-2">
+              <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-emerald-500"></div>
+              <span class="ml-2 text-emerald-500 text-sm">Refreshing...</span>
+            </div>
+          </transition>
+
           <div
             v-if="store.loading || budgetsStore.loading || transactionsStore.loading"
             class="flex items-center justify-center py-12"
           >
-            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-500"></div>
           </div>
 
           <div v-else-if="store.error" class="bg-red-50 p-4 rounded-lg">
@@ -318,15 +334,15 @@
                         <div class="flex-1 text-left">
                           <h3 class="font-medium text-gray-900 dark:text-gray-100 flex items-center">
                             {{ category.name }} 
-                            <span v-if="category.transactionCategoryGroupId" class="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 relative group">
+                            <span v-if="category.transactionCategoryGroupId" class="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-100 dark:bg-emerald-900 text-emerald-800 dark:text-emerald-200 relative group">
                               {{ categoryGroupsStore.groups.find(g => g.id === category.transactionCategoryGroupId)?.name }}
                               <button
                                 v-if="groupedBudgetCategories.grouped[category.transactionCategoryGroupId]?.[0]?.id === category.id"
-                                class="ml-1 p-0.5 rounded hover:bg-blue-200 dark:hover:bg-blue-800 transition-colors invisible group-hover:visible"
+                                class="ml-1 p-0.5 rounded hover:bg-emerald-200 dark:hover:bg-emerald-800 transition-colors invisible group-hover:visible"
                                 @click.stop="hideGroup(category.transactionCategoryGroupId)"
                                 title="Hide group"
                               >
-                                <EyeSlashIcon class="w-4 h-4 text-blue-500" />
+                                <EyeSlashIcon class="w-4 h-4 text-emerald-500" />
                               </button>
                             </span>
                           </h3>
@@ -407,7 +423,7 @@ import { useTransactionCategoryGroupsStore } from '@/stores/transactionCategoryG
 import TransactionModal from '@/components/TransactionModal.vue'
 import { Cog6ToothIcon } from '@heroicons/vue/24/outline'
 import SettingsModal from '@/components/SettingsModal.vue'
-import { EyeIcon, EyeSlashIcon } from '@heroicons/vue/24/outline'
+import { EyeIcon, EyeSlashIcon, ArrowPathIcon } from '@heroicons/vue/24/outline'
 
 defineOptions({
   name: 'HomeView',
@@ -437,6 +453,8 @@ const budgetGroupCollapse = ref<Record<string, boolean>>({})
 
 // Replace hiddenCategories with hiddenGroups
 const hiddenGroups = ref<string[]>([])
+
+const isRefreshing = ref(false)
 
 // Debug store state changes
 watch(
@@ -732,6 +750,19 @@ onMounted(() => {
       hiddenGroups.value = JSON.parse(storedHiddenGroups)
     } catch {}
   }
+  // Attach pull-to-refresh listeners for mobile
+  const scrollableEl = document.querySelector('.min-h-screen')
+  if (scrollableEl) {
+    scrollableEl.addEventListener('touchstart', (e) => {
+      if (e instanceof TouchEvent) onTouchStart(e)
+    }, { passive: true })
+    scrollableEl.addEventListener('touchmove', (e) => {
+      if (e instanceof TouchEvent) onTouchMove(e)
+    }, { passive: true })
+    scrollableEl.addEventListener('touchend', (e) => {
+      if (e instanceof TouchEvent) onTouchEnd()
+    }, { passive: true })
+  }
 })
 
 watch(includeCollapsed, (val) => {
@@ -768,6 +799,43 @@ function isGroupHidden(groupId: string): boolean {
 // Helper to check if a category is in a hidden group
 function isCategoryHidden(category: TransactionCategory): boolean {
   return !!category.transactionCategoryGroupId && isGroupHidden(category.transactionCategoryGroupId)
+}
+
+function refreshAll() {
+  isRefreshing.value = true
+  const now = new Date()
+  const firstDayOfMonthUTC = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1))
+  const dateString = firstDayOfMonthUTC.toISOString()
+  Promise.all([
+    store.fetchCategories(),
+    budgetsStore.fetchBudgets(dateString),
+    transactionsStore.fetchTransactions(),
+    categoryGroupsStore.fetchGroups(),
+  ]).finally(() => {
+    setTimeout(() => { isRefreshing.value = false }, 500) // show spinner for at least 0.5s
+  })
+}
+
+// Pull-to-refresh logic for mobile
+let startY = 0
+let pulling = false
+
+function onTouchStart(e: TouchEvent) {
+  if (window.scrollY === 0) {
+    startY = e.touches[0].clientY
+    pulling = true
+  }
+}
+function onTouchMove(e: TouchEvent) {
+  if (!pulling) return
+  const currentY = e.touches[0].clientY
+  if (currentY - startY > 60 && !isRefreshing.value) {
+    pulling = false
+    refreshAll()
+  }
+}
+function onTouchEnd() {
+  pulling = false
 }
 </script>
 
