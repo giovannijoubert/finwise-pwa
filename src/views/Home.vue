@@ -405,6 +405,7 @@
           v-model="showModal"
           :category="selectedCategory"
           :transactions="selectedCategoryTransactions"
+          @refresh="refreshAll"
         />
       </div>
     </div>

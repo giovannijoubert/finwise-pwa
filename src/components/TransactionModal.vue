@@ -28,7 +28,8 @@
         <div v-else class="divide-y divide-gray-100 dark:divide-gray-800">
           <div v-for="transaction in transactions" 
                :key="transaction.id" 
-               class="p-4 hover:bg-gray-50 active:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+               class="p-4 hover:bg-gray-50 active:bg-gray-100 dark:hover:bg-gray-800 transition-colors cursor-pointer"
+               @click="openRecategorizeModal(transaction)">
             <div class="flex items-start justify-between gap-4">
               <div class="flex-1 min-w-0">
                 <p class="font-medium text-gray-900 dark:text-gray-100 truncate">
@@ -52,10 +53,19 @@
       </div>
     </div>
   </div>
+
+  <RecategorizeModal
+    v-model="showRecategorizeModal"
+    :transaction="selectedTransaction"
+    @category-updated="handleCategoryUpdated"
+    @refresh="emit('refresh')"
+  />
 </template>
 
 <script setup lang="ts">
+import { ref } from 'vue'
 import type { Transaction } from '@/stores/transactions'
+import RecategorizeModal from './RecategorizeModal.vue'
 
 interface Props {
   modelValue: boolean
@@ -67,9 +77,26 @@ defineProps<Props>()
 
 const emit = defineEmits<{
   (e: 'update:modelValue', value: boolean): void
+  (e: 'refresh'): void
 }>()
+
+const showRecategorizeModal = ref(false)
+const selectedTransaction = ref<Transaction | null>(null)
 
 const close = () => {
   emit('update:modelValue', false)
+}
+
+const openRecategorizeModal = (transaction: Transaction) => {
+  selectedTransaction.value = transaction
+  showRecategorizeModal.value = true
+}
+
+const handleCategoryUpdated = () => {
+  // Refresh the transactions list
+  emit('update:modelValue', false)
+  setTimeout(() => {
+    emit('update:modelValue', true)
+  }, 100)
 }
 </script> 
