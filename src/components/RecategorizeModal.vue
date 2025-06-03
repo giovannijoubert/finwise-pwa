@@ -77,6 +77,14 @@
             </button>
             <button
               type="button"
+              class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              @click="markAsTransfer"
+              :disabled="isUpdating"
+            >
+              {{ isUpdating ? 'Updating...' : 'Mark as Transfer' }}
+            </button>
+            <button
+              type="button"
               class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500"
               @click="updateCategory"
               :disabled="isUpdating"
@@ -155,6 +163,47 @@ const updateCategory = async () => {
     close()
   } catch (error) {
     console.error('Error updating transaction category:', error)
+    // You might want to show an error message to the user here
+  } finally {
+    isUpdating.value = false
+  }
+}
+
+const markAsTransfer = async () => {
+  if (!props.transaction) {
+    close()
+    return
+  }
+
+  isUpdating.value = true
+  try {
+    const apiKey = localStorage.getItem('api_key')
+    if (!apiKey) throw new Error('API key not found')
+
+    const response = await fetch(`https://api.finwiseapp.io/transactions/${props.transaction.id}?timezone=Africa%2FJohannesburg`, {
+      method: 'PATCH',
+      headers: {
+        'accept': 'application/json, text/plain, */*',
+        'authorization': apiKey,
+        'content-type': 'application/json',
+        'origin': 'https://app.finwiseapp.io',
+        'referer': 'https://app.finwiseapp.io/'
+      },
+      body: JSON.stringify({
+        needsReview: false,
+        isTransfer: true
+      })
+    })
+
+    if (!response.ok) {
+      throw new Error('Failed to mark transaction as transfer')
+    }
+
+    emit('category-updated')
+    emit('refresh')
+    close()
+  } catch (error) {
+    console.error('Error marking transaction as transfer:', error)
     // You might want to show an error message to the user here
   } finally {
     isUpdating.value = false
