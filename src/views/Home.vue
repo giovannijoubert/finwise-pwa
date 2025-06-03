@@ -200,26 +200,51 @@
 
               <!-- Budget Section -->
               <div>
-                <button
-                  @click="showBudget = !showBudget"
-                  class="flex items-center w-full mb-2 group"
-                >
-                  <span class="text-lg font-medium text-gray-900 dark:text-gray-200 mr-2">Budget</span>
-                  <svg
-                    :class="showBudget ? 'rotate-90' : ''"
-                    class="w-4 h-4 text-gray-500 dark:text-gray-300 transition-transform"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
+                <div class="flex items-center justify-between mb-4">
+                  <button
+                    @click="showBudget = !showBudget"
+                    class="flex items-center group"
                   >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M9 5l7 7-7 7"
+                    <span class="text-lg font-medium text-gray-900 dark:text-gray-200 mr-2">Budget</span>
+                    <svg
+                      :class="showBudget ? 'rotate-90' : ''"
+                      class="w-4 h-4 text-gray-500 dark:text-gray-300 transition-transform"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M9 5l7 7-7 7"
+                      />
+                    </svg>
+                  </button>
+                  <div class="relative w-64">
+                    <input
+                      v-model="budgetSearch"
+                      type="text"
+                      placeholder="Search categories..."
+                      class="w-full px-4 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-emerald-500"
                     />
-                  </svg>
-                </button>
+                    <svg
+                      v-if="budgetSearch"
+                      @click="budgetSearch = ''"
+                      class="w-5 h-5 text-gray-400 absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer hover:text-gray-600 dark:hover:text-gray-300"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M6 18L18 6M6 6l12 12"
+                      />
+                    </svg>
+                  </div>
+                </div>
                 <transition name="fade">
                   <div
                     v-show="
@@ -457,6 +482,8 @@ const hiddenGroups = ref<string[]>([])
 
 const isRefreshing = ref(false)
 
+const budgetSearch = ref('')
+
 // Debug store state changes
 watch(
   () => store.categories,
@@ -502,7 +529,12 @@ const getIncomeCategories = computed(() => {
 
 const getExpenseCategories = computed(() => {
   return store.categories
-    .filter((category) => transactionsStore.getTotalExpenseForCategory(category.id) > 0)
+    .filter((category) => {
+      const hasTransactions = transactionsStore.getTotalExpenseForCategory(category.id) > 0
+      const matchesSearch = !budgetSearch.value || 
+        category.name.toLowerCase().includes(budgetSearch.value.toLowerCase())
+      return hasTransactions && matchesSearch
+    })
     .sort((a, b) => {
       const budgetA = budgetsStore.budgets.find((budget) => budget.transactionCategoryId === a.id)
       const budgetB = budgetsStore.budgets.find((budget) => budget.transactionCategoryId === b.id)

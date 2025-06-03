@@ -93,10 +93,7 @@ const openRecategorizeModal = (transaction: Transaction) => {
 }
 
 const handleCategoryUpdated = () => {
-  // Refresh the transactions list
+  // Close the modal after recategorizing
   emit('update:modelValue', false)
-  setTimeout(() => {
-    emit('update:modelValue', true)
-  }, 100)
 }
 </script> 
