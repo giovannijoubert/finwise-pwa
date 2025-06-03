@@ -20,15 +20,52 @@
         <div class="space-y-4">
           <div>
             <label for="category" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Category</label>
-            <select
-              id="category"
+ 
+            <Multiselect
               v-model="selectedCategoryId"
-              class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-emerald-500 focus:border-emerald-500 sm:text-sm rounded-md dark:bg-gray-700 dark:text-gray-100"
-            >
-              <option v-for="category in categories" :key="category.id" :value="category.id">
-                {{ category.name }}
-              </option>
-            </select>
+              :options="categories"
+              :searchable="true"
+              value-prop="id"
+              label="name"
+              placeholder="Select a category"
+              class="mt-1"
+              :classes="{
+                container: 'relative mx-auto w-full flex items-center justify-end box-border cursor-pointer border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 leading-snug outline-none',
+                containerDisabled: 'cursor-default opacity-50',
+                containerOpen: 'rounded-b-none',
+                containerOpenTop: 'rounded-t-none',
+                containerActive: 'ring-2 ring-emerald-500',
+                singleLabel: 'flex items-center h-full max-w-full absolute left-0 top-0 pointer-events-none bg-transparent leading-snug pl-3.5 pr-16 box-border rtl:left-auto rtl:right-0 rtl:pl-0 rtl:pr-3.5',
+                singleLabelText: 'overflow-ellipsis overflow-hidden block whitespace-nowrap max-w-full',
+                multipleLabel: 'flex items-center flex-wrap w-full py-1.5 px-3 bg-transparent',
+                search: 'w-full absolute inset-0 outline-none focus:ring-0 appearance-none box-border border-0 text-base font-sans bg-white dark:bg-gray-700 rounded-md pl-3.5 rtl:pl-0 rtl:pr-3.5',
+                tags: 'flex-grow flex-shrink flex flex-wrap gap-1 p-1.5',
+                tag: 'bg-emerald-500 text-white text-sm font-semibold py-0.5 pl-2 rounded mr-1 mb-1 flex items-center whitespace-nowrap',
+                tagDisabled: 'pr-2 opacity-50',
+                tagRemove: 'flex items-center justify-center text-emerald-200 hover:text-white hover:bg-emerald-600 rounded-r px-1',
+                tagRemoveIcon: 'bg-multiselect-remove bg-center bg-no-repeat opacity-30 inline-block w-3 h-3',
+                tagsSearchWrapper: 'inline-block relative mx-1 mb-1 flex-grow flex-shrink h-full',
+                tagsSearch: 'absolute inset-0 border-0 outline-none focus:ring-0 appearance-none p-0 text-base font-sans box-border w-full',
+                tagsSearchCopy: 'invisible whitespace-pre-wrap inline-block h-px',
+                placeholder: 'flex items-center h-full absolute left-0 top-0 pointer-events-none bg-transparent leading-snug pl-3.5 text-gray-500 dark:text-gray-400',
+                clear: 'pr-3.5 relative z-10 opacity-40 transition duration-300 flex-shrink-0 flex-grow-0 flex hover:opacity-80',
+                clearIcon: 'bg-multiselect-remove bg-center bg-no-repeat w-2.5 h-4 py-px box-content',
+                spinner: 'bg-multiselect-spinner bg-center bg-no-repeat w-4 h-4 z-10 mr-3.5 animate-spin flex-shrink-0 flex-grow-0',
+                dropdown: 'max-h-60 absolute -left-px -right-px bottom-0 transform translate-y-full border border-gray-300 dark:border-gray-600 -mt-px overflow-y-scroll z-50 flex flex-col rounded-b bg-white dark:bg-gray-700',
+                dropdownTop: '-translate-y-full top-px bottom-auto flex-col-reverse rounded-b-none rounded-t',
+                dropdownHidden: 'hidden',
+                options: 'flex flex-col p-0 m-0 list-none',
+                optionsTop: 'flex-col-reverse',
+                option: 'flex items-center justify-start box-border text-left cursor-pointer text-base leading-snug py-2 px-3',
+                optionPointed: 'text-gray-800 dark:text-gray-200 bg-gray-100 dark:bg-gray-600',
+                optionSelected: 'text-white bg-emerald-500',
+                optionDisabled: 'text-gray-300 cursor-not-allowed',
+                optionSelectedPointed: 'text-white bg-emerald-500 opacity-90',
+                optionSelectedDisabled: 'text-emerald-100 bg-emerald-500 bg-opacity-50 cursor-not-allowed',
+                fakeInput: 'bg-transparent absolute left-0 right-0 -bottom-px w-full h-px',
+                spacer: 'h-9 py-px box-content',
+              }"
+            />
           </div>
           <div class="flex justify-end space-x-3">
             <button
@@ -57,6 +94,8 @@
 import { ref, computed } from 'vue'
 import type { Transaction } from '@/stores/transactions'
 import { useTransactionCategoriesStore } from '@/stores/transactionCategories'
+import Multiselect from '@vueform/multiselect'
+import '@vueform/multiselect/themes/default.css'
 
 interface Props {
   modelValue: boolean
