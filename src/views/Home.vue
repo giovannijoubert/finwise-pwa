@@ -637,14 +637,21 @@ function getCategoryExpense(categoryId: string): string {
 }
 
 function getCategoryRemainderExpense(categoryId: string): string {
-  // Only use expense budget (debit) and actual expenses
-  const budget = budgetsStore.budgets.find(
+  // Get expense budget (debit)
+  const expenseBudget = budgetsStore.budgets.find(
     (b) => b.transactionCategoryId === categoryId && b.transactionType === 'debit',
   )
+  
   const spent = transactionsStore.getTotalExpenseForCategory(categoryId)
-  if (!budget && spent > 0) return formatCurrency(-spent)
-  if (!budget) return 'No budget'
-  const remainder = budget.amount.amount - spent
+  const received = transactionsStore.getTotalIncomeForCategory(categoryId)
+  
+  // If no expense budget but has spent, show negative spent
+  if (!expenseBudget && spent > 0) return formatCurrency(-spent)
+  // If no expense budget and no spent, show no budget
+  if (!expenseBudget) return 'No budget'
+  
+  // Calculate remainder considering both income and expenses
+  const remainder = expenseBudget.amount.amount - spent + received
   return formatCurrency(remainder)
 }
 
@@ -661,7 +668,10 @@ function getProgressPercentage(categoryId: string, mode: 'income' | 'expense'): 
   if (mode === 'income') {
     value = transactionsStore.getTotalIncomeForCategory(categoryId)
   } else {
-    value = transactionsStore.getTotalExpenseForCategory(categoryId)
+    // For expense mode, consider both spent and received
+    const spent = transactionsStore.getTotalExpenseForCategory(categoryId)
+    const received = transactionsStore.getTotalIncomeForCategory(categoryId)
+    value = spent - received // Subtract received from spent to get net expense
   }
   const budget = budgetsStore.budgets.find((b) => b.transactionCategoryId === categoryId)
   if (!budget) {
