@@ -531,9 +531,10 @@ const getExpenseCategories = computed(() => {
   return store.categories
     .filter((category) => {
       const hasTransactions = transactionsStore.getTotalExpenseForCategory(category.id) > 0
+      const hasBudget = budgetsStore.budgets.some(budget => budget.transactionCategoryId === category.id && budget.transactionType === 'debit')
       const matchesSearch = !budgetSearch.value || 
         category.name.toLowerCase().includes(budgetSearch.value.toLowerCase())
-      return hasTransactions && matchesSearch
+      return (hasTransactions || hasBudget) && matchesSearch
     })
     .sort((a, b) => {
       const budgetA = budgetsStore.budgets.find((budget) => budget.transactionCategoryId === a.id)
@@ -632,7 +633,8 @@ function getCategoryIncome(categoryId: string): string {
 
 function getCategoryExpense(categoryId: string): string {
   const expense = transactionsStore.getTotalExpenseForCategory(categoryId)
-  if (expense === 0) return 'No expense'
+  const hasBudget = budgetsStore.budgets.some(budget => budget.transactionCategoryId === categoryId && budget.transactionType === 'debit')
+  if (expense === 0 && !hasBudget) return 'No expense'
   return formatCurrency(expense)
 }
 
