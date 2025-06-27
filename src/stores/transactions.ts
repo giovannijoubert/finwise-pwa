@@ -63,7 +63,15 @@ export const useTransactionsStore = defineStore('transactions', () => {
       // Get date range from 27th of previous month to today
       const now = new Date()
       const toDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 21, 59, 59, 999)
-      const fromDate = new Date(now.getFullYear(), now.getMonth() - 1, 26, 22, 0, 0, 0)
+      const fromDate = new Date(
+        now.getFullYear(),
+        now.getMonth() - (now.getDate() >= 27 ? 0 : 1),
+        26,
+        22,
+        0,
+        0,
+        0,
+      )
 
       const filters = encodeURIComponent(
         JSON.stringify({
