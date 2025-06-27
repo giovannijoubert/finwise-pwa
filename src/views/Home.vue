@@ -766,7 +766,7 @@ onMounted(() => {
   if (!apiKeyMissing.value) {
     // Get first day of current month in UTC
     const now = new Date()
-    const firstDayOfMonthUTC = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1))
+    const firstDayOfMonthUTC = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth()+1, 1))
     const dateString = firstDayOfMonthUTC.toISOString()
     store.fetchCategories()
     budgetsStore.fetchBudgets(dateString)
